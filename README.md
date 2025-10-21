@@ -105,7 +105,6 @@ docker-compose exec app npx prisma migrate reset
 ```bash
 docker-compose exec app npx prisma studio
 ```
-Puis ouvrir : http://localhost:5555
 
 ## 📝 Variables d'environnement
 
@@ -128,10 +127,11 @@ Pour la production, modifiez :
 - [x] Masquage des réservations pour le créateur
 - [x] Suppression automatique après date limite
 - [ ] Notifications
-- [ ] Mode sombre
+- [x] Mode sombre
 - [ ] Ajout des tag sur les cadeaux
 - [ ] Export PDF
 - [ ] Secret Santa Mode
+- [ ] Traduction en anglais
 
 ## 📄 Licence
 

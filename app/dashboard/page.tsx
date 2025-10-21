@@ -4,6 +4,7 @@ import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import ThemeToggle from '@/components/ThemeToggle'
 
 interface List {
   id: string
@@ -97,31 +98,32 @@ export default function DashboardPage() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Chargement...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 dark:border-indigo-400 mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-300">Chargement...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="bg-white dark:bg-gray-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
             <Link href="/dashboard" className="flex items-center space-x-2">
               <span className="text-3xl">🎁</span>
-              <h1 className="text-2xl font-bold text-indigo-600">ListKdo</h1>
+              <h1 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">ListKdo</h1>
             </Link>
           </div>
           <div className="flex items-center space-x-4">
-            <span className="text-gray-700">Bonjour, {session?.user?.name}</span>
+            <ThemeToggle />
+            <span className="text-gray-700 dark:text-gray-300">Bonjour, {session?.user?.name}</span>
             <button
               onClick={() => signOut({ callbackUrl: '/' })}
-              className="text-gray-600 hover:text-gray-900"
+              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
             >
               Déconnexion
             </button>
@@ -134,21 +136,21 @@ export default function DashboardPage() {
         {/* Mes Listes */}
         <section className="mb-12">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Mes listes</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Mes listes</h2>
             <Link
               href="/dashboard/lists/new"
-              className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
+              className="bg-indigo-600 dark:bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition"
             >
               + Nouvelle liste
             </Link>
           </div>
 
           {myLists.length === 0 ? (
-            <div className="bg-white rounded-lg shadow p-8 text-center">
-              <p className="text-gray-600 mb-4">Vous n'avez pas encore créé de liste</p>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
+              <p className="text-gray-600 dark:text-gray-300 mb-4">Vous n'avez pas encore créé de liste</p>
               <Link
                 href="/dashboard/lists/new"
-                className="inline-block bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition"
+                className="inline-block bg-indigo-600 dark:bg-indigo-500 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition"
               >
                 Créer ma première liste
               </Link>
@@ -156,19 +158,19 @@ export default function DashboardPage() {
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {myLists.map((list) => (
-                <div key={list.id} className="bg-white rounded-lg shadow hover:shadow-lg transition p-6">
+                <div key={list.id} className="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition p-6">
                   <div className="flex justify-between items-start mb-3">
-                    <h3 className="text-xl font-bold text-gray-900">{list.title}</h3>
-                    <span className={`px-2 py-1 text-xs rounded ${list.isPublic ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{list.title}</h3>
+                    <span className={`px-2 py-1 text-xs rounded ${list.isPublic ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'}`}>
                       {list.isPublic ? 'Public' : 'Privé'}
                     </span>
                   </div>
                   
                   {list.description && (
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">{list.description}</p>
+                    <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-2">{list.description}</p>
                   )}
                   
-                  <div className="text-sm text-gray-500 mb-4">
+                  <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                     <p>📅 Expire le : {new Date(list.deadline).toLocaleDateString('fr-FR')}</p>
                     <p>🎁 {list._count.gifts} cadeau(x)</p>
                   </div>
@@ -176,19 +178,19 @@ export default function DashboardPage() {
                   <div className="flex gap-2">
                     <Link
                       href={`/dashboard/lists/${list.id}`}
-                      className="flex-1 text-center bg-indigo-600 text-white px-3 py-2 rounded text-sm hover:bg-indigo-700 transition"
+                      className="flex-1 text-center bg-indigo-600 dark:bg-indigo-500 text-white px-3 py-2 rounded text-sm hover:bg-indigo-700 dark:hover:bg-indigo-600 transition"
                     >
                       Gérer
                     </Link>
                     <button
                       onClick={() => copyShareLink(list.shareToken)}
-                      className="flex-1 bg-green-600 text-white px-3 py-2 rounded text-sm hover:bg-green-700 transition"
+                      className="flex-1 bg-green-600 dark:bg-green-700 text-white px-3 py-2 rounded text-sm hover:bg-green-700 dark:hover:bg-green-600 transition"
                     >
                       Partager
                     </button>
                     <button
                       onClick={() => handleDeleteList(list.id)}
-                      className="bg-red-600 text-white px-3 py-2 rounded text-sm hover:bg-red-700 transition"
+                      className="bg-red-600 dark:bg-red-700 text-white px-3 py-2 rounded text-sm hover:bg-red-700 dark:hover:bg-red-600 transition"
                     >
                       🗑️
                     </button>
@@ -201,39 +203,39 @@ export default function DashboardPage() {
 
         {/* Mes Réservations */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Mes réservations</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Mes réservations</h2>
           
           {myReservations.length === 0 ? (
-            <div className="bg-white rounded-lg shadow p-8 text-center">
-              <p className="text-gray-600">Vous n'avez pas encore réservé de cadeau</p>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
+              <p className="text-gray-600 dark:text-gray-300">Vous n'avez pas encore réservé de cadeau</p>
             </div>
           ) : (
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cadeau</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Liste</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantité</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Cadeau</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Liste</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Quantité</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                   {myReservations.map((reservation) => (
                     <tr key={reservation.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                         {reservation.gift.name}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                         {reservation.gift.list.title}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                         {reservation.quantity}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <Link
                           href={`/list/${reservation.gift.list.shareToken}`}
-                          className="text-indigo-600 hover:text-indigo-900"
+                          className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300"
                         >
                           Voir la liste
                         </Link>
