@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { signIn } from 'next-auth/react'
+import { getPasswordRequirements } from '@/lib/password-validator'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -12,6 +13,9 @@ export default function RegisterPage() {
   const [nickname, setNickname] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showRequirements, setShowRequirements] = useState(false)
+
+  const requirements = getPasswordRequirements()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -114,11 +118,21 @@ export default function RegisterPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onFocus={() => setShowRequirements(true)}
                 required
-                minLength={6}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                placeholder="Minimum 6 caractères"
+                placeholder="••••••••••••"
               />
+              {showRequirements && (
+                <div className="mt-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-xs font-medium text-blue-900 mb-1">Le mot de passe doit contenir :</p>
+                  <ul className="text-xs text-blue-800 space-y-0.5">
+                    {requirements.map((req, idx) => (
+                      <li key={idx}>• {req}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
 
             <button
