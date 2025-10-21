@@ -2,6 +2,10 @@
 
 Application web pour partager et gérer des listes de cadeaux.
 
+#### Context
+
+Test de création d'une application web en vidcoding.
+
 ## 🚀 Démarrage rapide avec Docker
 
 ### Prérequis
@@ -11,7 +15,6 @@ Application web pour partager et gérer des listes de cadeaux.
 
 1. **Build et démarrer l'application**
 ```bash
-cd listkdo
 docker compose up --build
 ```
 
@@ -42,6 +45,7 @@ Ouvrez votre navigateur sur : http://localhost:3000
 
 ## 🛠️ Technologies utilisées
 
+- **VibeCoding** :Claude Sonnet 4.5
 - **Frontend** : Next.js 14 (React) + TypeScript
 - **Styling** : Tailwind CSS
 - **Backend** : Next.js API Routes
@@ -53,15 +57,21 @@ Ouvrez votre navigateur sur : http://localhost:3000
 
 ```
 listkdo/
-├── app/                    # Pages et layouts Next.js
-│   ├── api/               # API Routes
-│   ├── auth/              # Pages d'authentification
-│   ├── dashboard/         # Dashboard utilisateur
-│   └── list/              # Pages des listes
-├── prisma/                # Schéma de base de données
-├── lib/                   # Utilitaires et configuration
-├── types/                 # Types TypeScript
-└── docker-compose.yml     # Configuration Docker
+├── app/                      # Pages et layouts Next.js
+│   ├── api/                  # API Routes (backend)
+│   ├── auth/                 # Pages d'authentification (login, register)
+│   ├── dashboard/            # Tableau de bord utilisateur
+│   ├── list/                 # Pages de gestion des listes de cadeaux
+│   └── page.tsx              # Page d'accueil principale
+├── prisma/                   # Schéma et migrations de base de données Prisma
+│   └── schema.prisma
+├── lib/                      # Fonctions utilitaires et configuration globale
+├── types/                    # Déclarations de types TypeScript
+├── public/                   # Fichiers statiques (images, favicon, etc.)
+├── styles/                   # Fichiers CSS/Tailwind personnalisés
+├── .env                      # Variables d'environnement (local)
+├── docker-compose.yml        # Configuration Docker
+└── README.md                 # Documentation du projet
 ```
 
 ## 🔧 Commandes utiles
