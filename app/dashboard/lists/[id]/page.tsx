@@ -197,7 +197,7 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 dark:border-indigo-400 mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-300">Chargement...</p>
@@ -211,7 +211,7 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       {/* Header */}
       <header className="bg-white dark:bg-gray-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
@@ -267,7 +267,7 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
 
           {/* Add/Edit Gift Form */}
           {showGiftForm && (
-            <form onSubmit={editingGiftId ? handleUpdateGift : handleAddGift} className="mb-8 p-6 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <form onSubmit={editingGiftId ? handleUpdateGift : handleAddGift} className="mb-8 p-6 bg-gray-100 dark:bg-gray-700 rounded-lg">
               <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-4">
                 {editingGiftId ? 'Modifier le cadeau' : 'Nouveau cadeau'}
               </h4>

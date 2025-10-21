@@ -32,12 +32,33 @@ interface Reservation {
   }
 }
 
+interface SecretSanta {
+  id: string
+  title: string
+  deadline: string
+  status: string
+  _count: {
+    participants: number
+  }
+}
+
+interface SecretSantaInvitation {
+  id: string
+  secretSanta: {
+    id: string
+    title: string
+    deadline: string
+  }
+}
+
 export default function DashboardPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [myLists, setMyLists] = useState<List[]>([])
   const [sharedLists, setSharedLists] = useState<List[]>([])
   const [myReservations, setMyReservations] = useState<Reservation[]>([])
+  const [secretSantas, setSecretSantas] = useState<SecretSanta[]>([])
+  const [pendingInvitations, setPendingInvitations] = useState<SecretSantaInvitation[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -63,6 +84,14 @@ export default function DashboardPage() {
       if (reservationsRes.ok) {
         const data = await reservationsRes.json()
         setMyReservations(data.reservations || [])
+      }
+
+      // Charger mes Secret Santas
+      const secretSantaRes = await fetch('/api/secret-santa')
+      if (secretSantaRes.ok) {
+        const data = await secretSantaRes.json()
+        setSecretSantas([...data.created, ...data.participating])
+        setPendingInvitations(data.invitations || [])
       }
 
       setLoading(false)
@@ -98,7 +127,7 @@ export default function DashboardPage() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 dark:border-indigo-400 mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-300">Chargement...</p>
@@ -108,7 +137,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       {/* Header */}
       <header className="bg-white dark:bg-gray-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
@@ -202,7 +231,7 @@ export default function DashboardPage() {
         </section>
 
         {/* Mes Réservations */}
-        <section>
+        <section className="mb-12">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Mes réservations</h2>
           
           {myReservations.length === 0 ? (
@@ -212,7 +241,7 @@ export default function DashboardPage() {
           ) : (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className="bg-gray-50 dark:bg-gray-700">
+                <thead className="bg-gray-100 dark:bg-gray-700">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Cadeau</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Liste</th>
@@ -244,6 +273,127 @@ export default function DashboardPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+        </section>
+
+        {/* Secret Santa */}
+        <section>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Secret Santa 🎅</h2>
+            <Link
+              href="/secret-santa/new"
+              className="bg-indigo-600 dark:bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition"
+            >
+              + Nouveau Secret Santa
+            </Link>
+          </div>
+
+          {secretSantas.length === 0 && pendingInvitations.length === 0 ? (
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
+              <p className="text-gray-600 dark:text-gray-300 mb-4">Vous n'avez pas encore créé de Secret Santa</p>
+              <Link
+                href="/secret-santa/new"
+                className="inline-block bg-indigo-600 dark:bg-indigo-500 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition"
+              >
+                Créer mon premier Secret Santa
+              </Link>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Invitations en attente */}
+              {pendingInvitations.map((invitation) => (
+                <div key={invitation.id} className="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition p-6">
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{invitation.secretSanta.title}</h3>
+                    <span className="px-2 py-1 text-xs rounded bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-300">
+                      Invitation
+                    </span>
+                  </div>
+                  
+                  <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    <p>📅 {new Date(invitation.secretSanta.deadline).toLocaleDateString('fr-FR')}</p>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Link
+                      href={`/secret-santa/${invitation.secretSanta.id}`}
+                      className="flex-1 text-center bg-indigo-600 dark:bg-indigo-500 text-white px-3 py-2 rounded text-sm hover:bg-indigo-700 dark:hover:bg-indigo-600 transition"
+                    >
+                      Répondre
+                    </Link>
+                  </div>
+                </div>
+              ))}
+
+              {/* Secret Santas actifs */}
+              {secretSantas
+                .filter(ss => ss.status === 'ACTIVE')
+                .map((ss) => {
+                  const daysUntilDeadline = Math.ceil((new Date(ss.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+                  return (
+                    <div key={ss.id} className="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition p-6">
+                      <div className="flex justify-between items-start mb-3">
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">{ss.title}</h3>
+                        <span className="px-2 py-1 text-xs rounded bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300">
+                          Actif
+                        </span>
+                      </div>
+                      
+                      <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                        <p>📅 {new Date(ss.deadline).toLocaleDateString('fr-FR')}</p>
+                        <p>👥 {ss._count.participants} participant(s)</p>
+                        {daysUntilDeadline <= 7 && (
+                          <p className="text-red-600 dark:text-red-400 font-bold mt-1">
+                            ⏰ {daysUntilDeadline > 0 ? `Dans ${daysUntilDeadline} jour(s)` : 'Aujourd\'hui !'}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Link
+                          href={`/secret-santa/${ss.id}`}
+                          className="flex-1 text-center bg-indigo-600 dark:bg-indigo-500 text-white px-3 py-2 rounded text-sm hover:bg-indigo-700 dark:hover:bg-indigo-600 transition"
+                        >
+                          Voir
+                        </Link>
+                      </div>
+                    </div>
+                  )
+                })}
+
+              {/* Secret Santas en draft */}
+              {secretSantas
+                .filter(ss => ss.status === 'DRAFT')
+                .map((ss) => (
+                  <div key={ss.id} className="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition p-6">
+                    <div className="flex justify-between items-start mb-3">
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white">{ss.title}</h3>
+                      <span className="px-2 py-1 text-xs rounded bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300">
+                        Brouillon
+                      </span>
+                    </div>
+                    
+                    <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                      <p>� {new Date(ss.deadline).toLocaleDateString('fr-FR')}</p>
+                      <p>� {ss._count.participants} participant(s)</p>
+                      {ss._count.participants < 3 && (
+                        <p className="text-orange-600 dark:text-orange-400 mt-1">
+                          ⚠️ Min. 3 participants requis
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Link
+                        href={`/secret-santa/${ss.id}`}
+                        className="flex-1 text-center bg-indigo-600 dark:bg-indigo-500 text-white px-3 py-2 rounded text-sm hover:bg-indigo-700 dark:hover:bg-indigo-600 transition"
+                      >
+                        Configurer
+                      </Link>
+                    </div>
+                  </div>
+                ))}
             </div>
           )}
         </section>

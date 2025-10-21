@@ -17,8 +17,12 @@ model User {
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 
-  lists        List[]
-  reservations Reservation[]
+  lists                    List[]
+  reservations             Reservation[]
+  createdSecretSantas      SecretSanta[]               @relation("SecretSantaCreator")
+  secretSantaParticipations SecretSantaParticipant[]
+  sentSecretSantaInvitations SecretSantaInvitation[]   @relation("InvitationSender")
+  receivedSecretSantaInvitations SecretSantaInvitation[] @relation("InvitationReceiver")
 }
 
 model List {
@@ -65,4 +69,60 @@ model Reservation {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([giftId, userId])
+}
+
+model SecretSanta {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  deadline    DateTime
+  maxAmount   Float?   // Montant maximum suggéré
+  status      String   @default("DRAFT") // DRAFT, ACTIVE, COMPLETED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  creatorId String
+  creator   User   @relation("SecretSantaCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+
+  participants SecretSantaParticipant[]
+  invitations  SecretSantaInvitation[]
+}
+
+model SecretSantaParticipant {
+  id           String   @id @default(cuid())
+  joinedAt     DateTime @default(now())
+  
+  // Attribution : qui offre à qui
+  assignedToId String?  // ID du participant à qui cette personne doit offrir
+  assignedTo   SecretSantaParticipant? @relation("SecretSantaAssignment", fields: [assignedToId], references: [id], onDelete: SetNull)
+  assignedFrom SecretSantaParticipant[] @relation("SecretSantaAssignment")
+
+  secretSantaId String
+  secretSanta   SecretSanta @relation(fields: [secretSantaId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([secretSantaId, userId])
+}
+
+model SecretSantaInvitation {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  status    String   @default("PENDING") // PENDING, ACCEPTED, DECLINED
+  sentAt    DateTime @default(now())
+  respondedAt DateTime?
+
+  secretSantaId String
+  secretSanta   SecretSanta @relation(fields: [secretSantaId], references: [id], onDelete: Cascade)
+
+  senderId String
+  sender   User   @relation("InvitationSender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  // Si l'invité a un compte
+  receiverId String?
+  receiver   User?   @relation("InvitationReceiver", fields: [receiverId], references: [id], onDelete: SetNull)
+
+  @@unique([secretSantaId, email])
 }

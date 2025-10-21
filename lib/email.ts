@@ -12,6 +12,29 @@ const transporter = nodemailer.createTransport({
   },
 })
 
+export async function sendEmail(options: {
+  to: string
+  subject: string
+  html: string
+  text?: string
+}) {
+  const mailOptions = {
+    from: process.env.SMTP_FROM || '"ListKdo" <noreply@listkdo.com>',
+    to: options.to,
+    subject: options.subject,
+    html: options.html,
+    text: options.text,
+  }
+
+  try {
+    await transporter.sendMail(mailOptions)
+    return { success: true }
+  } catch (error) {
+    console.error('Erreur lors de l\'envoi de l\'email:', error)
+    return { success: false, error }
+  }
+}
+
 export async function sendPasswordResetEmail(email: string, resetToken: string) {
   const resetUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/auth/reset-password?token=${resetToken}`
 
