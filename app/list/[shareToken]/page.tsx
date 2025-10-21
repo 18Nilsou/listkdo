@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { use } from 'react'
 
 interface Reservation {
   id: string
@@ -35,26 +34,26 @@ interface List {
   gifts: Gift[]
 }
 
-export default function PublicListPage({ params }: { params: Promise<{ shareToken: string }> }) {
-  const resolvedParams = use(params)
+export default function PublicListPage({ params }: { params: { shareToken: string } }) {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [list, setList] = useState<List | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [reserveQuantities, setReserveQuantities] = useState<Record<string, number>>({})
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/auth/login')
-    }
     if (status === 'authenticated') {
       loadList()
+    } else if (status === 'unauthenticated') {
+      // Allow unauthenticated users to see the list preview
+      loadList()
     }
-  }, [status, resolvedParams.shareToken])
+  }, [status, params.shareToken])
 
   const loadList = async () => {
     try {
-      const res = await fetch(`/api/lists/public/${resolvedParams.shareToken}`)
+      const res = await fetch(`/api/lists/public/${params.shareToken}`)
       const data = await res.json()
 
       if (!res.ok) {
@@ -158,6 +157,60 @@ export default function PublicListPage({ params }: { params: Promise<{ shareToke
 
   if (!list) {
     return null
+  }
+
+  // If not authenticated, show invitation to create account
+  if (status === 'unauthenticated') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500">
+        <div className="min-h-screen bg-black bg-opacity-20 flex items-center justify-center px-4">
+          <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8">
+            <div className="text-center mb-6">
+              <span className="text-6xl">🎁</span>
+              <h1 className="text-3xl font-bold text-gray-900 mt-4">ListKdo</h1>
+            </div>
+            
+            <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-6 mb-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-2">{list.title}</h2>
+              {list.description && (
+                <p className="text-gray-600 text-sm mb-3">{list.description}</p>
+              )}
+              <p className="text-sm text-gray-700">
+                📅 À offrir avant le : <strong>{new Date(list.deadline).toLocaleDateString('fr-FR')}</strong>
+              </p>
+              <p className="text-sm text-gray-700 mt-2">
+                🎁 <strong>{list.gifts.length}</strong> cadeau(x) dans cette liste
+              </p>
+            </div>
+
+            <div className="text-center mb-6">
+              <p className="text-gray-700 mb-4">
+                Pour voir et réserver des cadeaux sur cette liste, vous devez créer un compte ou vous connecter.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <Link
+                href="/auth/register"
+                className="block w-full bg-indigo-600 text-white text-center px-6 py-3 rounded-lg hover:bg-indigo-700 transition font-semibold"
+              >
+                Créer un compte gratuitement
+              </Link>
+              <Link
+                href="/auth/login"
+                className="block w-full bg-white border-2 border-indigo-600 text-indigo-600 text-center px-6 py-3 rounded-lg hover:bg-indigo-50 transition font-semibold"
+              >
+                J'ai déjà un compte
+              </Link>
+            </div>
+
+            <p className="text-xs text-gray-500 text-center mt-6">
+              C'est gratuit et ça prend moins d'une minute ! 🚀
+            </p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   const isOwner = session?.user?.id === list.userId
@@ -279,25 +332,43 @@ export default function PublicListPage({ params }: { params: Promise<{ shareToke
 
                     {/* Actions */}
                     {!isOwner && (
-                      <div className="flex gap-2">
+                      <div>
                         {myReservation ? (
                           <button
                             onClick={() => handleCancelReservation(gift.id)}
-                            className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
+                            className="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
                           >
                             Annuler ma réservation
                           </button>
                         ) : available > 0 ? (
-                          <button
-                            onClick={() => handleReserve(gift.id, 1)}
-                            className="flex-1 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
-                          >
-                            Réserver (1)
-                          </button>
+                          <div className="space-y-2">
+                            {gift.quantity > 1 && (
+                              <div className="flex items-center gap-2">
+                                <label className="text-sm font-medium text-gray-700">Quantité :</label>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  max={available}
+                                  value={reserveQuantities[gift.id] || 1}
+                                  onChange={(e) => setReserveQuantities({
+                                    ...reserveQuantities,
+                                    [gift.id]: Math.min(Math.max(1, parseInt(e.target.value) || 1), available)
+                                  })}
+                                  className="w-20 px-3 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                                />
+                              </div>
+                            )}
+                            <button
+                              onClick={() => handleReserve(gift.id, reserveQuantities[gift.id] || 1)}
+                              className="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
+                            >
+                              Réserver {gift.quantity > 1 ? `(${reserveQuantities[gift.id] || 1})` : ''}
+                            </button>
+                          </div>
                         ) : (
                           <button
                             disabled
-                            className="flex-1 bg-gray-300 text-gray-500 px-4 py-2 rounded-lg cursor-not-allowed"
+                            className="w-full bg-gray-300 text-gray-500 px-4 py-2 rounded-lg cursor-not-allowed"
                           >
                             Indisponible
                           </button>
