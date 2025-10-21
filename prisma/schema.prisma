@@ -1,0 +1,66 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  nickname  String
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lists        List[]
+  reservations Reservation[]
+}
+
+model List {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  deadline    DateTime
+  isPublic    Boolean  @default(false)
+  shareToken  String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  gifts Gift[]
+}
+
+model Gift {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  links       String? // JSON array of links
+  priority    String   @default("MOYEN") // FAIBLE, MOYEN, HAUT, TRES_HAUT
+  quantity    Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  listId String
+  list   List   @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  reservations Reservation[]
+}
+
+model Reservation {
+  id        String   @id @default(cuid())
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+
+  giftId String
+  gift   Gift   @relation(fields: [giftId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([giftId, userId])
+}

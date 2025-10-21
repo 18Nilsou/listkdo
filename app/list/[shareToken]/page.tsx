@@ -1,0 +1,316 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { use } from 'react'
+
+interface Reservation {
+  id: string
+  quantity: number
+  user: {
+    id: string
+    nickname: string
+  }
+}
+
+interface Gift {
+  id: string
+  name: string
+  description: string | null
+  links: string | null
+  priority: string
+  quantity: number
+  reservations: Reservation[]
+}
+
+interface List {
+  id: string
+  title: string
+  description: string | null
+  deadline: string
+  isPublic: boolean
+  userId: string
+  gifts: Gift[]
+}
+
+export default function PublicListPage({ params }: { params: Promise<{ shareToken: string }> }) {
+  const resolvedParams = use(params)
+  const { data: session, status } = useSession()
+  const router = useRouter()
+  const [list, setList] = useState<List | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/login')
+    }
+    if (status === 'authenticated') {
+      loadList()
+    }
+  }, [status, resolvedParams.shareToken])
+
+  const loadList = async () => {
+    try {
+      const res = await fetch(`/api/lists/public/${resolvedParams.shareToken}`)
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.error || 'Liste non trouvée')
+        setLoading(false)
+        return
+      }
+
+      setList(data.list)
+      setLoading(false)
+    } catch (error) {
+      console.error('Erreur:', error)
+      setError('Erreur lors du chargement')
+      setLoading(false)
+    }
+  }
+
+  const handleReserve = async (giftId: string, quantity: number) => {
+    try {
+      const res = await fetch(`/api/gifts/${giftId}/reserve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quantity }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        alert(data.error || 'Erreur lors de la réservation')
+        return
+      }
+
+      alert('Réservation effectuée avec succès !')
+      loadList()
+    } catch (error) {
+      console.error('Erreur:', error)
+      alert('Erreur lors de la réservation')
+    }
+  }
+
+  const handleCancelReservation = async (giftId: string) => {
+    if (!confirm('Annuler votre réservation ?')) return
+
+    try {
+      const res = await fetch(`/api/gifts/${giftId}/reserve`, {
+        method: 'DELETE',
+      })
+
+      if (res.ok) {
+        alert('Réservation annulée')
+        loadList()
+      }
+    } catch (error) {
+      console.error('Erreur:', error)
+    }
+  }
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'FAIBLE': return 'bg-gray-100 text-gray-800'
+      case 'MOYEN': return 'bg-blue-100 text-blue-800'
+      case 'HAUT': return 'bg-orange-100 text-orange-800'
+      case 'TRES_HAUT': return 'bg-red-100 text-red-800'
+      default: return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const getPriorityLabel = (priority: string) => {
+    switch (priority) {
+      case 'FAIBLE': return 'Faible'
+      case 'MOYEN': return 'Moyen'
+      case 'HAUT': return 'Haut'
+      case 'TRES_HAUT': return 'Très haut'
+      default: return priority
+    }
+  }
+
+  if (loading || status === 'loading') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Chargement...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 text-xl mb-4">{error}</p>
+          <Link href="/dashboard" className="text-indigo-600 hover:underline">
+            Retour au dashboard
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  if (!list) {
+    return null
+  }
+
+  const isOwner = session?.user?.id === list.userId
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+          <Link href="/dashboard" className="flex items-center space-x-2">
+            <span className="text-3xl">🎁</span>
+            <h1 className="text-2xl font-bold text-indigo-600">ListKdo</h1>
+          </Link>
+          <span className="text-gray-700">Bonjour, {session?.user?.name}</span>
+        </div>
+      </header>
+
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* List Header */}
+        <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">{list.title}</h2>
+          {list.description && (
+            <p className="text-gray-600 text-lg mb-4">{list.description}</p>
+          )}
+          <p className="text-gray-500">
+            📅 À offrir avant le : {new Date(list.deadline).toLocaleDateString('fr-FR')}
+          </p>
+          
+          {isOwner && (
+            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-yellow-800 font-medium">
+                ℹ️ Vous êtes le propriétaire de cette liste. Vous ne voyez pas qui a réservé quoi.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Gifts */}
+        <div className="space-y-6">
+          <h3 className="text-2xl font-bold text-gray-900">Cadeaux disponibles ({list.gifts.length})</h3>
+
+          {list.gifts.length === 0 ? (
+            <div className="bg-white rounded-lg shadow p-8 text-center">
+              <p className="text-gray-600">Aucun cadeau dans cette liste pour le moment.</p>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-6">
+              {list.gifts.map((gift) => {
+                const totalReserved = gift.reservations.reduce((sum, r) => sum + r.quantity, 0)
+                const available = gift.quantity - totalReserved
+                const myReservation = gift.reservations.find(r => r.user.id === session?.user?.id)
+                const otherReservations = gift.reservations.filter(r => r.user.id !== session?.user?.id)
+
+                return (
+                  <div key={gift.id} className="bg-white rounded-lg shadow-lg p-6">
+                    <div className="flex justify-between items-start mb-3">
+                      <h4 className="text-xl font-bold text-gray-900">{gift.name}</h4>
+                      <span className={`px-2 py-1 text-xs rounded ${getPriorityColor(gift.priority)}`}>
+                        {getPriorityLabel(gift.priority)}
+                      </span>
+                    </div>
+
+                    {gift.description && (
+                      <p className="text-gray-600 mb-3">{gift.description}</p>
+                    )}
+
+                    {gift.links && (
+                      <div className="mb-4 p-3 bg-gray-50 rounded">
+                        <p className="text-sm font-medium text-gray-700 mb-1">Où le trouver :</p>
+                        {gift.links.split('\n').map((link, idx) => (
+                          <div key={idx} className="text-sm">
+                            {link.startsWith('http') ? (
+                              <a 
+                                href={link} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="text-indigo-600 hover:underline break-all"
+                              >
+                                🔗 {link}
+                              </a>
+                            ) : (
+                              <span className="text-gray-700">📍 {link}</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Reservation Status - Hidden for owner */}
+                    {!isOwner && (
+                      <div className="mb-4">
+                        {otherReservations.length > 0 && (
+                          <div className="text-sm text-gray-600 mb-2">
+                            Réservé par : {otherReservations.map(r => 
+                              `${r.user.nickname} (${r.quantity})`
+                            ).join(', ')}
+                          </div>
+                        )}
+                        
+                        {myReservation && (
+                          <div className="p-3 bg-green-50 border border-green-200 rounded mb-2">
+                            <p className="text-green-800 font-medium">
+                              ✓ Vous avez réservé : {myReservation.quantity}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Available quantity */}
+                    <div className="mb-4">
+                      <span className={`font-semibold ${available > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {available > 0 ? `${available} disponible(s)` : 'Plus disponible'}
+                      </span>
+                      <span className="text-gray-500 text-sm ml-2">
+                        (sur {gift.quantity})
+                      </span>
+                    </div>
+
+                    {/* Actions */}
+                    {!isOwner && (
+                      <div className="flex gap-2">
+                        {myReservation ? (
+                          <button
+                            onClick={() => handleCancelReservation(gift.id)}
+                            className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
+                          >
+                            Annuler ma réservation
+                          </button>
+                        ) : available > 0 ? (
+                          <button
+                            onClick={() => handleReserve(gift.id, 1)}
+                            className="flex-1 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
+                          >
+                            Réserver (1)
+                          </button>
+                        ) : (
+                          <button
+                            disabled
+                            className="flex-1 bg-gray-300 text-gray-500 px-4 py-2 rounded-lg cursor-not-allowed"
+                          >
+                            Indisponible
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
+  )
+}
