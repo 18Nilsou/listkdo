@@ -29,7 +29,17 @@ export async function sendPasswordResetEmail(email: string, resetToken: string) 
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
             .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
             .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
-            .button { display: inline-block; background: #4f46e5; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+            .button { 
+              display: inline-block; 
+              background: #4f46e5; 
+              color: #ffffff !important; 
+              padding: 12px 30px; 
+              text-decoration: none; 
+              border-radius: 5px; 
+              margin: 20px 0;
+              font-weight: bold;
+              font-size: 16px;
+            }
             .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; }
           </style>
         </head>
@@ -43,7 +53,7 @@ export async function sendPasswordResetEmail(email: string, resetToken: string) 
               <p>Bonjour,</p>
               <p>Vous avez demandé à réinitialiser votre mot de passe. Cliquez sur le bouton ci-dessous pour créer un nouveau mot de passe :</p>
               <div style="text-align: center;">
-                <a href="${resetUrl}" class="button">Réinitialiser mon mot de passe</a>
+                <a href="${resetUrl}" class="button" style="color: #ffffff !important; text-decoration: none;">Réinitialiser mon mot de passe</a>
               </div>
               <p><strong>Ce lien est valide pendant 1 heure.</strong></p>
               <p>Si vous n'avez pas demandé cette réinitialisation, vous pouvez ignorer cet email en toute sécurité.</p>
