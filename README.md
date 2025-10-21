@@ -115,14 +115,23 @@ Pour la production, modifiez :
 - `NEXTAUTH_SECRET` : Utilisez `openssl rand -base64 32` pour générer une clé sécurisée
 - `NEXTAUTH_URL` : URL de votre application en production
 
-## 🎯 TODO (Prochaines fonctionnalités)
+## 🎯 TODO
 
-- [ ] Dashboard complet
-- [ ] Gestion des listes (CRUD)
-- [ ] Système de réservation
-- [ ] Notifications (optionnel)
+- [x] Dashboard complet
+- [x] Gestion des listes (CRUD)
+- [x] Système de réservation
+- [x] Authentification (Email + Mot de passe)
+- [x] Mot de pass oublié
+- [x] Ajout de cadeaux (nom, description, lien, priorité, quantité)
+- [x] Partage de listes (public/privé)
+- [x] Réservation de cadeaux
+- [x] Masquage des réservations pour le créateur
+- [x] Suppression automatique après date limite
+- [ ] Notifications
 - [ ] Mode sombre
+- [ ] Ajout des tag sur les cadeaux
 - [ ] Export PDF
+- [ ] Secret Santa Mode
 
 ## 📄 Licence
 
