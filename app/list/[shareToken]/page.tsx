@@ -231,7 +231,15 @@ export default function PublicListPage({ params }: { params: { shareToken: strin
           </Link>
           <div className="flex items-center space-x-4">
             <ThemeToggle />
-            <span className="text-gray-700 dark:text-gray-300">Bonjour, {session?.user?.name}</span>
+            <span className="text-gray-700 dark:text-gray-300">
+              Bonjour,{' '}
+              <Link 
+                href="/profile" 
+                className="hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition"
+              >
+                {session?.user?.name} 👤
+              </Link>
+            </span>
           </div>
         </div>
       </header>

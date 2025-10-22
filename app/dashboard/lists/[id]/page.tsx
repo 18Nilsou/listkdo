@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import ThemeToggle from '@/components/ThemeToggle'
 
@@ -33,6 +34,7 @@ interface List {
 
 export default function ListDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
+  const { data: session } = useSession()
   const [list, setList] = useState<List | null>(null)
   const [loading, setLoading] = useState(true)
   const [showGiftForm, setShowGiftForm] = useState(false)
@@ -219,7 +221,18 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
             <span className="text-3xl">🎁</span>
             <h1 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">ListKdo</h1>
           </Link>
-          <ThemeToggle />
+          <div className="flex items-center space-x-4">
+            <span className="text-gray-700 dark:text-gray-300">
+              Bonjour,{' '}
+              <Link 
+                href="/profile" 
+                className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+              >
+                {session?.user?.name} 👤
+              </Link>
+            </span>
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 

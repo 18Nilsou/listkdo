@@ -149,8 +149,16 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center space-x-4">
             <ThemeToggle />
-            <span className="text-gray-700 dark:text-gray-300">Bonjour, {session?.user?.name}</span>
-            <button
+            <span className="text-gray-700 dark:text-gray-300">
+              Bonjour,{' '}
+              <Link 
+                href="/profile" 
+                className="hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition"
+              >
+                {session?.user?.name} 👤
+              </Link>
+            </span>
+            <button 
               onClick={() => signOut({ callbackUrl: '/' })}
               className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
             >
