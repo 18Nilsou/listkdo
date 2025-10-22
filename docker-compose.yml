@@ -1,6 +1,16 @@
-version: '3.8'
-
 services:
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: listkdo
+      POSTGRES_PASSWORD: listkdo_password
+      POSTGRES_DB: listkdo
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
   app:
     build: .
     ports:
@@ -10,7 +20,12 @@ services:
       - /app/node_modules
       - /app/.next
     environment:
-      - DATABASE_URL=file:./dev.db
+      - DATABASE_URL=postgresql://listkdo:listkdo_password@db:5432/listkdo
       - NEXTAUTH_URL=http://localhost:3000
       - NEXTAUTH_SECRET=your-super-secret-key-change-this-in-production
     command: npm run dev
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
