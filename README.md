@@ -130,7 +130,7 @@ Pour la production, modifiez :
 - [x] Mode sombre
 - [ ] Ajout des tag sur les cadeaux
 - [ ] Export PDF
-- [ ] Secret Santa Mode
+- [x] Secret Santa Mode
 - [ ] Traduction en anglais
 
 ## 📄 Licence

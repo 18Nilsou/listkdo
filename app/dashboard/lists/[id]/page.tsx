@@ -32,6 +32,18 @@ interface List {
   gifts: Gift[]
 }
 
+interface Invitation {
+  id: string
+  email: string
+  status: string
+  sentAt: string
+  receiver: {
+    id: string
+    nickname: string
+    email: string
+  } | null
+}
+
 export default function ListDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const { data: session } = useSession()
@@ -39,6 +51,11 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
   const [loading, setLoading] = useState(true)
   const [showGiftForm, setShowGiftForm] = useState(false)
   const [editingGiftId, setEditingGiftId] = useState<string | null>(null)
+  const [showInviteForm, setShowInviteForm] = useState(false)
+  const [invitations, setInvitations] = useState<Invitation[]>([])
+  const [inviteEmails, setInviteEmails] = useState('')
+  const [inviteLoading, setInviteLoading] = useState(false)
+  const [inviteError, setInviteError] = useState('')
   
   // Form state
   const [giftName, setGiftName] = useState('')
@@ -49,6 +66,7 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     loadList()
+    loadInvitations()
   }, [params.id])
 
   const loadList = async () => {
@@ -64,6 +82,56 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
       console.error('Erreur:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadInvitations = async () => {
+    try {
+      const res = await fetch(`/api/lists/${params.id}/invitations`)
+      if (res.ok) {
+        const data = await res.json()
+        setInvitations(data.invitations)
+      }
+    } catch (error) {
+      console.error('Erreur:', error)
+    }
+  }
+
+  const handleSendInvitations = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setInviteLoading(true)
+    setInviteError('')
+
+    const emails = inviteEmails
+      .split(/[,\n]/)
+      .map((email) => email.trim())
+      .filter((email) => email.length > 0)
+
+    if (emails.length === 0) {
+      setInviteError('Veuillez entrer au moins un email')
+      setInviteLoading(false)
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/lists/${params.id}/invitations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emails }),
+      })
+
+      if (res.ok) {
+        setInviteEmails('')
+        setShowInviteForm(false)
+        loadInvitations()
+      } else {
+        const data = await res.json()
+        setInviteError(data.error || 'Erreur lors de l\'envoi')
+      }
+    } catch (error) {
+      setInviteError('Erreur lors de l\'envoi')
+    } finally {
+      setInviteLoading(false)
     }
   }
 
@@ -256,12 +324,97 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
             <p>🎁 {list.gifts.length} cadeau(x)</p>
           </div>
 
-          <button
-            onClick={copyShareLink}
-            className="bg-green-600 dark:bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition"
-          >
-            📋 Copier le lien de partage
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={copyShareLink}
+              className="bg-green-600 dark:bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition"
+            >
+              📋 Copier le lien
+            </button>
+            <button
+              onClick={() => setShowInviteForm(!showInviteForm)}
+              className="bg-blue-600 dark:bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition"
+            >
+              ✉️ Inviter des personnes
+            </button>
+          </div>
+
+          {/* Invite Form */}
+          {showInviteForm && (
+            <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <h4 className="font-bold text-gray-900 dark:text-white mb-3">
+                Inviter des personnes à consulter cette liste
+              </h4>
+              <form onSubmit={handleSendInvitations}>
+                <textarea
+                  value={inviteEmails}
+                  onChange={(e) => setInviteEmails(e.target.value)}
+                  placeholder="Entrez les emails (un par ligne ou séparés par des virgules)&#10;exemple@email.com&#10;autre@email.com"
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 mb-3"
+                />
+                {inviteError && (
+                  <p className="text-red-600 dark:text-red-400 text-sm mb-3">{inviteError}</p>
+                )}
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    disabled={inviteLoading}
+                    className="bg-blue-600 dark:bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {inviteLoading ? 'Envoi...' : 'Envoyer les invitations'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowInviteForm(false)
+                      setInviteEmails('')
+                      setInviteError('')
+                    }}
+                    className="bg-gray-300 dark:bg-gray-600 text-gray-900 dark:text-white px-4 py-2 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition"
+                  >
+                    Annuler
+                  </button>
+                </div>
+              </form>
+
+              {/* Invitations List */}
+              {invitations.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-gray-300 dark:border-gray-600">
+                  <h5 className="font-semibold text-gray-900 dark:text-white mb-2">
+                    Invitations envoyées ({invitations.length})
+                  </h5>
+                  <div className="space-y-2">
+                    {invitations.map((inv) => (
+                      <div
+                        key={inv.id}
+                        className="flex justify-between items-center text-sm bg-white dark:bg-gray-800 p-2 rounded"
+                      >
+                        <span className="text-gray-700 dark:text-gray-300">
+                          {inv.receiver?.nickname || inv.email}
+                        </span>
+                        <span
+                          className={`px-2 py-1 rounded text-xs ${
+                            inv.status === 'ACCEPTED'
+                              ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200'
+                              : inv.status === 'DECLINED'
+                              ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200'
+                              : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200'
+                          }`}
+                        >
+                          {inv.status === 'ACCEPTED'
+                            ? 'Acceptée'
+                            : inv.status === 'DECLINED'
+                            ? 'Refusée'
+                            : 'En attente'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Gifts Section */}

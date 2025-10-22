@@ -23,6 +23,8 @@ model User {
   secretSantaParticipations SecretSantaParticipant[]
   sentSecretSantaInvitations SecretSantaInvitation[]   @relation("InvitationSender")
   receivedSecretSantaInvitations SecretSantaInvitation[] @relation("InvitationReceiver")
+  sentListInvitations      ListInvitation[]            @relation("ListInvitationSender")
+  receivedListInvitations  ListInvitation[]            @relation("ListInvitationReceiver")
 }
 
 model List {
@@ -38,7 +40,8 @@ model List {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  gifts Gift[]
+  gifts       Gift[]
+  invitations ListInvitation[]
 }
 
 model Gift {
@@ -125,4 +128,25 @@ model SecretSantaInvitation {
   receiver   User?   @relation("InvitationReceiver", fields: [receiverId], references: [id], onDelete: SetNull)
 
   @@unique([secretSantaId, email])
+}
+
+model ListInvitation {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  status    String   @default("PENDING") // PENDING, ACCEPTED, DECLINED
+  sentAt    DateTime @default(now())
+  respondedAt DateTime?
+
+  listId String
+  list   List   @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  senderId String
+  sender   User   @relation("ListInvitationSender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  // Si l'invité a un compte
+  receiverId String?
+  receiver   User?   @relation("ListInvitationReceiver", fields: [receiverId], references: [id], onDelete: SetNull)
+
+  @@unique([listId, email])
 }

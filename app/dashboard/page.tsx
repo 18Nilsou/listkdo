@@ -51,6 +51,20 @@ interface SecretSantaInvitation {
   }
 }
 
+interface ListInvitation {
+  id: string
+  token: string
+  list: {
+    id: string
+    title: string
+    deadline: string
+    shareToken: string
+  }
+  sender: {
+    nickname: string
+  }
+}
+
 export default function DashboardPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
@@ -59,6 +73,7 @@ export default function DashboardPage() {
   const [myReservations, setMyReservations] = useState<Reservation[]>([])
   const [secretSantas, setSecretSantas] = useState<SecretSanta[]>([])
   const [pendingInvitations, setPendingInvitations] = useState<SecretSantaInvitation[]>([])
+  const [listInvitations, setListInvitations] = useState<ListInvitation[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -92,6 +107,13 @@ export default function DashboardPage() {
         const data = await secretSantaRes.json()
         setSecretSantas([...data.created, ...data.participating])
         setPendingInvitations(data.invitations || [])
+      }
+
+      // Charger mes invitations de listes
+      const listInvitationsRes = await fetch('/api/lists/invitations/my-invitations')
+      if (listInvitationsRes.ok) {
+        const data = await listInvitationsRes.json()
+        setListInvitations(data.invitations || [])
       }
 
       setLoading(false)
@@ -237,6 +259,38 @@ export default function DashboardPage() {
             </div>
           )}
         </section>
+
+        {/* Invitations de Listes en attente */}
+        {listInvitations.length > 0 && (
+          <section className="mb-12">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+              Invitations de listes en attente ({listInvitations.length})
+            </h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {listInvitations.map((invitation) => (
+                <div key={invitation.id} className="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition p-6 border-2 border-blue-200 dark:border-blue-700">
+                  <div className="mb-4">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                      📋 {invitation.list.title}
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                      Invité par : <strong>{invitation.sender.nickname}</strong>
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      📅 Expire le : {new Date(invitation.list.deadline).toLocaleDateString('fr-FR')}
+                    </p>
+                  </div>
+                  <Link
+                    href={`/list/join/${invitation.token}`}
+                    className="block w-full bg-blue-600 dark:bg-blue-500 text-white text-center px-4 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition"
+                  >
+                    Voir l'invitation
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Mes Réservations */}
         <section className="mb-12">
