@@ -97,7 +97,7 @@ export default function JoinSecretSantaPage({ params }: { params: { token: strin
       })
 
       if (res.ok) {
-        router.push('/secret-santa')
+        router.push('/dashboard')
       } else {
         alert('❌ Erreur lors du refus')
       }
@@ -130,10 +130,10 @@ export default function JoinSecretSantaPage({ params }: { params: { token: strin
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Invitation non valide</h1>
             <p className="text-gray-600 dark:text-gray-300 mb-6">{error}</p>
             <Link
-              href="/secret-santa"
+              href="/dashboard"
               className="inline-block bg-indigo-600 dark:bg-indigo-500 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition font-semibold"
             >
-              Retour aux Secret Santas
+              Retour au dashboard
             </Link>
           </div>
         </div>

@@ -50,11 +50,11 @@ export default function NewSecretSantaPage() {
   const today = new Date().toISOString().split('T')[0]
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       {/* Header */}
       <header className="bg-white dark:bg-gray-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <Link href="/secret-santa" className="flex items-center space-x-2">
+          <Link href="/dashboard" className="flex items-center space-x-2">
             <span className="text-3xl">🎅</span>
             <h1 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">Secret Santa</h1>
           </Link>
@@ -161,7 +161,7 @@ export default function NewSecretSantaPage() {
                 {loading ? 'Création...' : 'Créer le Secret Santa'}
               </button>
               <Link
-                href="/secret-santa"
+                href="/dashboard"
                 className="flex-1 text-center bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-3 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition"
               >
                 Annuler
