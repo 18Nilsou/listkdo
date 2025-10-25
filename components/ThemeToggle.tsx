@@ -3,7 +3,16 @@
 import { useTheme } from '@/contexts/ThemeContext'
 
 export default function ThemeToggle() {
-  const { theme, toggleTheme } = useTheme()
+  const { theme, toggleTheme, mounted } = useTheme()
+
+  // Ne rien afficher tant que le composant n'est pas monté côté client
+  if (!mounted) {
+    return (
+      <div className="p-2 w-9 h-9" aria-label="Loading theme toggle">
+        {/* Placeholder pour éviter le layout shift */}
+      </div>
+    )
+  }
 
   return (
     <button
