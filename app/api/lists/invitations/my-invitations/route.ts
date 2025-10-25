@@ -3,6 +3,9 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
+// Force cette route à être dynamique
+export const dynamic = 'force-dynamic'
+
 // GET - Récupérer mes invitations en attente
 export async function GET(request: NextRequest) {
   try {

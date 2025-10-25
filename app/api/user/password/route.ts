@@ -4,6 +4,8 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 
+export const dynamic = 'force-dynamic'
+
 // PATCH - Update user password
 export async function PATCH(req: NextRequest) {
   try {
