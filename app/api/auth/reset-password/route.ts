@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hash } from 'bcryptjs'
 import { validatePassword } from '@/lib/password-validator'
+import crypto from 'crypto'
+
+export const dynamic = 'force-dynamic'
 
 export async function POST(request: Request) {
   try {
@@ -23,10 +26,13 @@ export async function POST(request: Request) {
       )
     }
 
-    // Trouver l'utilisateur avec ce token
+    // Hacher le token reçu pour le comparer
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex')
+
+    // Trouver l'utilisateur avec ce token haché
     const user = await prisma.user.findFirst({
       where: {
-        resetToken: token,
+        resetToken: hashedToken,
         resetTokenExpiry: {
           gt: new Date() // Token non expiré
         }
@@ -34,6 +40,10 @@ export async function POST(request: Request) {
     })
 
     if (!user) {
+      // Log de sécurité pour tentatives avec token invalide
+      const ip = request.headers.get('x-forwarded-for') || 'unknown'
+      console.log(`[SECURITY] Invalid reset token attempt from IP: ${ip}`)
+      
       return NextResponse.json(
         { error: 'Token invalide ou expiré' },
         { status: 400 }
@@ -43,7 +53,7 @@ export async function POST(request: Request) {
     // Hasher le nouveau mot de passe
     const hashedPassword = await hash(password, 12)
 
-    // Mettre à jour le mot de passe et supprimer le token
+    // Mettre à jour le mot de passe et INVALIDER le token
     await prisma.user.update({
       where: { id: user.id },
       data: {
@@ -52,6 +62,10 @@ export async function POST(request: Request) {
         resetTokenExpiry: null,
       }
     })
+
+    // Log de sécurité
+    const ip = request.headers.get('x-forwarded-for') || 'unknown'
+    console.log(`[SECURITY] Password successfully reset for user: ${user.email} from IP: ${ip}`)
 
     return NextResponse.json({
       message: 'Mot de passe réinitialisé avec succès'

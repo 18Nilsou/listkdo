@@ -3,8 +3,39 @@ import { hash } from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { validatePassword } from '@/lib/password-validator'
 
+export const dynamic = 'force-dynamic'
+
+// Rate limiting simple pour les inscriptions
+const registerAttempts = new Map<string, { count: number; resetAt: number }>()
+
+function checkRegisterRateLimit(ip: string): boolean {
+  const now = Date.now()
+  const attempt = registerAttempts.get(ip)
+  
+  if (!attempt || now - attempt.resetAt > 3600000) { // 1 heure
+    registerAttempts.set(ip, { count: 1, resetAt: now })
+    return true
+  }
+  
+  if (attempt.count >= 5) { // Max 5 inscriptions par heure par IP
+    return false
+  }
+  
+  attempt.count++
+  return true
+}
+
 export async function POST(request: Request) {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for') || 'unknown'
+    if (!checkRegisterRateLimit(ip)) {
+      return NextResponse.json(
+        { error: 'Trop de tentatives d\'inscription. Réessayez plus tard.' },
+        { status: 429 }
+      )
+    }
+
     const { email, password, nickname } = await request.json()
 
     if (!email || !password || !nickname) {
@@ -46,6 +77,9 @@ export async function POST(request: Request) {
         nickname,
       }
     })
+
+    // Log de sécurité
+    console.log(`[SECURITY] New user registered: ${email} from IP: ${ip}`)
 
     return NextResponse.json(
       { 
