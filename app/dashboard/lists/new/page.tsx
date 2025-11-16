@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import ThemeToggle from '@/components/ThemeToggle'
+import SearchBar from '@/components/SearchBar'
 
 export default function NewListPage() {
   const router = useRouter()
@@ -50,22 +51,30 @@ export default function NewListPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       {/* Header */}
       <header className="bg-white dark:bg-gray-800 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <Link href="/dashboard" className="flex items-center space-x-2">
-            <span className="text-3xl">🎁</span>
-            <h1 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">ListKdo</h1>
-          </Link>
-          <div className="flex items-center space-x-4">
-            <span className="text-gray-700 dark:text-gray-300">
-              Bonjour,{' '}
-              <Link 
-                href="/profile" 
-                className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-              >
-                {session?.user?.name} 👤
-              </Link>
-            </span>
-            <ThemeToggle />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex justify-between items-center gap-4">
+            <Link href="/dashboard" className="flex items-center space-x-2">
+              <span className="text-3xl">🎁</span>
+              <h1 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">ListKdo</h1>
+            </Link>
+            
+            {/* Barre de recherche */}
+            <div className="flex-1 max-w-2xl">
+              <SearchBar />
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <span className="text-gray-700 dark:text-gray-300">
+                Bonjour,{' '}
+                <Link 
+                  href="/profile" 
+                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                >
+                  {session?.user?.name} 👤
+                </Link>
+              </span>
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       </header>

@@ -97,6 +97,48 @@ export async function PUT(
   }
 }
 
+export async function PATCH(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
+    }
+
+    const { isPublic } = await request.json()
+
+    const existingList = await prisma.list.findUnique({
+      where: { id: params.id }
+    })
+
+    if (!existingList) {
+      return NextResponse.json({ error: 'Liste non trouvée' }, { status: 404 })
+    }
+
+    if (existingList.userId !== session.user.id) {
+      return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
+    }
+
+    const list = await prisma.list.update({
+      where: { id: params.id },
+      data: {
+        isPublic: isPublic !== undefined ? isPublic : existingList.isPublic,
+      },
+    })
+
+    return NextResponse.json({ list })
+  } catch (error) {
+    console.error('Erreur:', error)
+    return NextResponse.json(
+      { error: 'Erreur lors de la mise à jour' },
+      { status: 500 }
+    )
+  }
+}
+
 export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }

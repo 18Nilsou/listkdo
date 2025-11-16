@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import ThemeToggle from '@/components/ThemeToggle'
+import SearchBar from '@/components/SearchBar'
 
 interface List {
   id: string
@@ -162,30 +163,38 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       {/* Header */}
       <header className="bg-white dark:bg-gray-800 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <Link href="/dashboard" className="flex items-center space-x-2">
-              <span className="text-3xl">🎁</span>
-              <h1 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">ListKdo</h1>
-            </Link>
-          </div>
-          <div className="flex items-center space-x-4">
-            <ThemeToggle />
-            <span className="text-gray-700 dark:text-gray-300">
-              Bonjour,{' '}
-              <Link 
-                href="/profile" 
-                className="hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition"
-              >
-                {session?.user?.name} 👤
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex justify-between items-center gap-4">
+            <div className="flex items-center space-x-2">
+              <Link href="/dashboard" className="flex items-center space-x-2">
+                <span className="text-3xl">🎁</span>
+                <h1 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">ListKdo</h1>
               </Link>
-            </span>
-            <button 
-              onClick={() => signOut({ callbackUrl: '/' })}
-              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
-            >
-              Déconnexion
-            </button>
+            </div>
+            
+            {/* Barre de recherche */}
+            <div className="flex-1 max-w-2xl">
+              <SearchBar />
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <ThemeToggle />
+              <span className="text-gray-700 dark:text-gray-300">
+                Bonjour,{' '}
+                <Link 
+                  href="/profile" 
+                  className="hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition"
+                >
+                  {session?.user?.name} 👤
+                </Link>
+              </span>
+              <button 
+                onClick={() => signOut({ callbackUrl: '/' })}
+                className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+              >
+                Déconnexion
+              </button>
+            </div>
           </div>
         </div>
       </header>

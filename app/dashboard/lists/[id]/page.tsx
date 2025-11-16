@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import ThemeToggle from '@/components/ThemeToggle'
+import SearchBar from '@/components/SearchBar'
 
 interface Gift {
   id: string
@@ -95,6 +96,27 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
       }
     } catch (error) {
       console.error('Erreur:', error)
+    }
+  }
+
+  const handleTogglePublic = async () => {
+    if (!list) return
+
+    try {
+      const res = await fetch(`/api/lists/${params.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isPublic: !list.isPublic }),
+      })
+
+      if (res.ok) {
+        loadList() // Recharger la liste pour mettre à jour l'affichage
+      } else {
+        alert('Erreur lors de la modification')
+      }
+    } catch (error) {
+      console.error('Erreur:', error)
+      alert('Erreur lors de la modification')
     }
   }
 
@@ -340,22 +362,30 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       {/* Header */}
       <header className="bg-white dark:bg-gray-800 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <Link href="/dashboard" className="flex items-center space-x-2">
-            <span className="text-3xl">🎁</span>
-            <h1 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">ListKdo</h1>
-          </Link>
-          <div className="flex items-center space-x-4">
-            <span className="text-gray-700 dark:text-gray-300">
-              Bonjour,{' '}
-              <Link 
-                href="/profile" 
-                className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-              >
-                {session?.user?.name} 👤
-              </Link>
-            </span>
-            <ThemeToggle />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex justify-between items-center gap-4">
+            <Link href="/dashboard" className="flex items-center space-x-2">
+              <span className="text-3xl">🎁</span>
+              <h1 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">ListKdo</h1>
+            </Link>
+            
+            {/* Barre de recherche */}
+            <div className="flex-1 max-w-2xl">
+              <SearchBar />
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <span className="text-gray-700 dark:text-gray-300">
+                Bonjour,{' '}
+                <Link 
+                  href="/profile" 
+                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                >
+                  {session?.user?.name} 👤
+                </Link>
+              </span>
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       </header>
@@ -370,9 +400,28 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
                 <p className="text-gray-600 dark:text-gray-300 mt-2">{list.description}</p>
               )}
             </div>
-            <span className={`px-3 py-1 rounded ${list.isPublic ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'}`}>
-              {list.isPublic ? 'Public' : 'Privé'}
-            </span>
+            
+            {/* Toggle Public/Privé */}
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {list.isPublic ? '🌍 Public' : '🔒 Privé'}
+              </span>
+              <button
+                onClick={handleTogglePublic}
+                className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                  list.isPublic 
+                    ? 'bg-green-600 dark:bg-green-500' 
+                    : 'bg-gray-300 dark:bg-gray-600'
+                }`}
+                title={list.isPublic ? 'Rendre privé' : 'Rendre public'}
+              >
+                <span
+                  className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                    list.isPublic ? 'translate-x-7' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
           </div>
 
           <div className="flex gap-4 text-sm text-gray-600 dark:text-gray-300 mb-4">
