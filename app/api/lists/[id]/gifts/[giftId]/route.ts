@@ -26,10 +26,20 @@ export async function PUT(
     const body = await request.json()
     const { description, links, priority } = body
 
+    // Validation des données
+    if (description && description.length > 2000) {
+      return NextResponse.json({ error: 'La description ne peut pas dépasser 2000 caractères' }, { status: 400 })
+    }
+
+    const validPriorities = ['FAIBLE', 'MOYEN', 'HAUT', 'TRES_HAUT']
+    if (priority && !validPriorities.includes(priority)) {
+      return NextResponse.json({ error: 'Priorité invalide' }, { status: 400 })
+    }
+
     const updatedGift = await prisma.gift.update({
       where: { id: params.giftId },
       data: {
-        description: description || null,
+        description: description?.trim() || null,
         links: links || null,
         priority,
       }

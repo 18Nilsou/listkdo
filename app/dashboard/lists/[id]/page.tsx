@@ -62,7 +62,8 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
   const [giftDescription, setGiftDescription] = useState('')
   const [giftLinks, setGiftLinks] = useState('')
   const [giftPriority, setGiftPriority] = useState('MOYEN')
-  const [giftQuantity, setGiftQuantity] = useState(1)
+  const [giftQuantity, setGiftQuantity] = useState<number | ''>(1)
+  const [formErrors, setFormErrors] = useState<{[key: string]: string}>({})
 
   useEffect(() => {
     loadList()
@@ -135,8 +136,38 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
     }
   }
 
+  const validateGiftForm = () => {
+    const errors: {[key: string]: string} = {}
+    
+    if (!giftName || giftName.trim().length === 0) {
+      errors.name = 'Le nom du cadeau est requis'
+    } else if (giftName.length > 200) {
+      errors.name = 'Le nom ne peut pas dépasser 200 caractères'
+    }
+    
+    if (giftDescription && giftDescription.length > 2000) {
+      errors.description = 'La description ne peut pas dépasser 2000 caractères'
+    }
+    
+    const quantityValue = typeof giftQuantity === 'number' ? giftQuantity : parseInt(giftQuantity) || 0
+    if (quantityValue < 1) {
+      errors.quantity = 'La quantité doit être d\'au moins 1'
+    } else if (quantityValue > 100) {
+      errors.quantity = 'La quantité ne peut pas dépasser 100'
+    }
+    
+    setFormErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
   const handleAddGift = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!validateGiftForm()) {
+      return
+    }
+
+    const quantityValue = typeof giftQuantity === 'number' ? giftQuantity : parseInt(giftQuantity) || 1
 
     try {
       const res = await fetch(`/api/lists/${params.id}/gifts`, {
@@ -147,9 +178,11 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
           description: giftDescription,
           links: giftLinks,
           priority: giftPriority,
-          quantity: giftQuantity,
+          quantity: quantityValue,
         }),
       })
+
+      const data = await res.json()
 
       if (res.ok) {
         // Reset form
@@ -158,13 +191,18 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
         setGiftLinks('')
         setGiftPriority('MOYEN')
         setGiftQuantity(1)
+        setFormErrors({})
         setShowGiftForm(false)
         
         // Reload list
         loadList()
+      } else {
+        // Afficher l'erreur de l'API
+        setFormErrors({ api: data.error || 'Erreur lors de la création du cadeau' })
       }
     } catch (error) {
       console.error('Erreur:', error)
+      setFormErrors({ api: 'Erreur lors de la création du cadeau' })
     }
   }
 
@@ -181,6 +219,17 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
   const handleUpdateGift = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!editingGiftId) return
+    
+    // Validation pour la modification (sans nom et quantité)
+    const errors: {[key: string]: string} = {}
+    if (giftDescription && giftDescription.length > 2000) {
+      errors.description = 'La description ne peut pas dépasser 2000 caractères'
+    }
+    
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors)
+      return
+    }
 
     try {
       const res = await fetch(`/api/lists/${params.id}/gifts/${editingGiftId}`, {
@@ -193,6 +242,8 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
         }),
       })
 
+      const data = await res.json()
+
       if (res.ok) {
         // Reset form
         setGiftName('')
@@ -200,14 +251,18 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
         setGiftLinks('')
         setGiftPriority('MOYEN')
         setGiftQuantity(1)
+        setFormErrors({})
         setShowGiftForm(false)
         setEditingGiftId(null)
         
         // Reload list
         loadList()
+      } else {
+        setFormErrors({ api: data.error || 'Erreur lors de la modification du cadeau' })
       }
     } catch (error) {
       console.error('Erreur:', error)
+      setFormErrors({ api: 'Erreur lors de la modification du cadeau' })
     }
   }
 
@@ -217,6 +272,7 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
     setGiftLinks('')
     setGiftPriority('MOYEN')
     setGiftQuantity(1)
+    setFormErrors({})
     setShowGiftForm(false)
     setEditingGiftId(null)
   }
@@ -437,6 +493,14 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
               <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-4">
                 {editingGiftId ? 'Modifier le cadeau' : 'Nouveau cadeau'}
               </h4>
+              
+              {/* Afficher les erreurs globales */}
+              {formErrors.api && (
+                <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg">
+                  <p className="text-red-800 dark:text-red-200 text-sm">{formErrors.api}</p>
+                </div>
+              )}
+              
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -448,11 +512,15 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
                     onChange={(e) => setGiftName(e.target.value)}
                     required
                     disabled={!!editingGiftId}
-                    className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 ${editingGiftId ? 'bg-gray-100 dark:bg-gray-900 cursor-not-allowed' : ''}`}
+                    maxLength={200}
+                    className={`w-full px-3 py-2 border ${formErrors.name ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 ${editingGiftId ? 'bg-gray-100 dark:bg-gray-900 cursor-not-allowed' : ''}`}
                     placeholder="Ex: Livre Harry Potter"
                   />
                   {editingGiftId && (
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Le nom ne peut pas être modifié</p>
+                  )}
+                  {formErrors.name && (
+                    <p className="text-xs text-red-600 dark:text-red-400 mt-1">{formErrors.name}</p>
                   )}
                 </div>
 
@@ -464,9 +532,16 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
                     value={giftDescription}
                     onChange={(e) => setGiftDescription(e.target.value)}
                     rows={2}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
+                    maxLength={2000}
+                    className={`w-full px-3 py-2 border ${formErrors.description ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400`}
                     placeholder="Détails supplémentaires..."
                   />
+                  {formErrors.description && (
+                    <p className="text-xs text-red-600 dark:text-red-400 mt-1">{formErrors.description}</p>
+                  )}
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {giftDescription.length}/2000 caractères
+                  </p>
                 </div>
 
                 <div className="md:col-span-2">
@@ -501,16 +576,40 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
                 {!editingGiftId && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Quantité
+                      Quantité *
                     </label>
                     <input
                       type="number"
                       value={giftQuantity}
-                      onChange={(e) => setGiftQuantity(parseInt(e.target.value))}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        if (value === '') {
+                          setGiftQuantity('')
+                        } else {
+                          const numValue = parseInt(value)
+                          if (!isNaN(numValue)) {
+                            setGiftQuantity(numValue)
+                          }
+                        }
+                      }}
+                      onBlur={(e) => {
+                        // Si le champ est vide quand on le quitte, mettre 1 par défaut
+                        if (e.target.value === '') {
+                          setGiftQuantity(1)
+                        }
+                      }}
                       min="1"
+                      max="100"
                       required
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
+                      className={`w-full px-3 py-2 border ${formErrors.quantity ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400`}
+                      placeholder="1"
                     />
+                    {formErrors.quantity && (
+                      <p className="text-xs text-red-600 dark:text-red-400 mt-1">{formErrors.quantity}</p>
+                    )}
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Entre 1 et 100
+                    </p>
                   </div>
                 )}
               </div>
